@@ -105,7 +105,8 @@ export default [
           '07-useImperativeHandle',
           '08-flushSync',
           '09-useSyncExternalStore',
-          '10-suspense'
+          '10-suspense',
+          '11-useTransition'
         ]
       },
       {
