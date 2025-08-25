@@ -77,7 +77,8 @@ export default [
           '014-implement-new',
           '015-function',
           '016-this',
-          '017-implement-call-apply-bind'
+          '017-implement-call-apply-bind',
+          '018-addEventListener'
         ]
       }
     ]
