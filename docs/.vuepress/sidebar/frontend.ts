@@ -103,7 +103,8 @@ export default [
           '06-createPortal',
           '07-useImperativeHandle',
           '08-flushSync',
-          '09-useSyncExternalStore'
+          '09-useSyncExternalStore',
+          '10-suspense'
         ]
       },
       {
