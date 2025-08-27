@@ -8,7 +8,7 @@ tags:
 
 ## 缓存 promise
 
-在组件中获取数据是很好的，但这存在一个问题：
+下述代码获取存在一个性能问题，每次点击按钮，都会重新调用 `fetchUser` 函数，触发一个新的 fetch 请求，这不仅效率低下，还会导致 `NumberInfo` 组件挂起，渲染 `suspense` 边界。
 
 ```tsx
 async function fetchUser() {
@@ -29,8 +29,6 @@ function NumberInfo() {
 	)
 }
 ```
-
-每次点击按钮，都会重新调用 `fetchUser` 函数，触发一个新的 fetch 请求，这不仅效率低下，还会导致 `NumberInfo` 组件挂起，渲染 `suspense` 边界。
 
 解决方法是添加缓存到我们的 `fetchUser` 函数中。这样，如果 `fetchUser` 函数再次被调用，我们可以返回之前返回的相同 promise：
 
@@ -174,7 +172,7 @@ function ProductGrid({ productsPromise }) {
 为了使从加载到 resolved 状态的过渡更平滑，可以使用 `useTransition` hook。这个 hook 返回一个包含两个值的元组：一个布尔值和一个 `startTransition` 函数。
 
 - 当 promise 仍处于 pending 状态时，布尔值为 `true`，当 promise 已 resolved 时，布尔值为 `false`。这允许你显示一个加载状态，而不是使用 `suspense` 边界 fallback UI。这通常会带来更平滑的用户体验。
-- `startTransition` 函数是一个回调，你可以使用它来触发状态更新，这将导致 promise 被获取。
+- `startTransition` 函数是一个回调，可以使用它来保证旧 UI 的展示，避免用户看到突兀的 UI 变化。
 
 ```tsx lines=3,6-8
 function ProductList() {
@@ -201,6 +199,24 @@ function ProductList() {
   )
 }
 ```
+
+`startTransition` 的核心是 **调度更新优先级**，而「旧 UI 保留」只是它带来的副作用体验，不是它本质。
+
+React 内部把更新分成紧急和非紧急：
+
+- 紧急更新：输入框、点击 → 立即响应
+- 非紧急更新：列表渲染、大量 DOM 更新 → 可以延迟
+
+`startTransition` 就是告诉 React：这次更新不重要，先保证用户交互流畅，再慢慢渲染。
+
+当你把 `Suspense` 放进 `Transition` 时，会带来一个副作用：旧 UI 保留。新数据还没准备好 → React 会先保留旧 UI，不会立刻切到 fallback。
+
+这个行为是 **调度策略带来的体验效果**，而不是 `Transition` 本身的目标。
+
+换句话说：
+
+- `Transition` 目标（调度策略） = 降低更新优先级，让交互不卡顿
+- `UI` 保留效果 = 因为更新被降级了，所以旧 UI 还能显示
 
 > [!TIP]
 > React 单独提供了 `useTransition` 返回的 `startTransition` 函数，当你不需要 `isPending` 时，可以直接使用 `startTransition` 函数。

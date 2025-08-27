@@ -13,20 +13,50 @@ const data = await response.json()
 
 虽然代码很简单，但无论你的服务器有多快，你都需要考虑用户在等待时看到的内容。你无法控制用户的网络连接。同样，你还需要考虑如果请求失败会发生什么。你也无法控制用户的连接可靠性。
 
-React 提供了一套优雅的解决方案来处理这些场景：`Suspense` 和 `ErrorBoundary` 组件。
+## 传统实现
+
+下述代码是一个传统的实现方式，它通过 `useState` 和 `useEffect` 来管理异步状态，在数据加载完成之前，会展示 `Loading...` 状态，在数据加载失败时，会展示 `Error: {error.message}` 状态。
+
+```tsx
+function DataLoader() {
+  const [isLoading, setIsLoading] = useState(true)
+  const [error, setError] = useState(null)
+  const [data, setData] = useState(null)
+
+  const fetchData = async () => {
+    try {
+      const response = await fetch('https://api.example.com/data')
+      const data = await response.json()
+      setData(data)
+    } catch (error) {
+      setError(error)
+    } finally {
+      setIsLoading(false)
+    }
+	}
+
+  useEffect(() => {
+    fetchData()
+  }, [])
+
+  if (isLoading) return <div>Loading...</div>
+  if (error) return <div>Error: {error.message}</div>
+  return <div>{data}</div>
+}
+```
+
+## 使用 Suspense
+
+React 提供了一套优雅的解决方案来处理这些场景：`Suspense` 和 `ErrorBoundary` 组件。`Suspense` 组件可以让你在等待数据加载时展示一个 fallback UI，而 `ErrorBoundary` 组件可以让你在数据加载失败时展示一个错误 UI。
 
 关键问题在于：如何在渲染 UI 时恰当地处理异步状态？这时候 `use` 钩子就派上用场了：
 
 ```tsx
-function PhoneDetails() {
-	const details = use(phoneDetailsPromise)
-	// now you have the details
+function DataLoader() {
+	const data = use(fetchDataPromise)
+	return <div>{data}</div>
 }
 ```
-
-重要的是要理解 `use` 钩子是如何传递一个 promise 的。它不是创建 promise 的地方。你需要在其他地方触发 `fetch` 请求，然后将它传递给 `use` 钩子。否则，每次组件渲染时，你都会再次触发 `fetch` 请求。
-
-真正的诀窍是 `use` 钩子如何将 promise 转换为已解决的值，而无需使用 `await`！我们需要确保如果 `use` 钩子不能返回已解决的 `details`，代码不会继续。
 
 为了完成声明式循环，当 promise 被抛出时，React 会「暂停」组件，这意味着它会向上查找父组件的树，寻找 `Suspense` 组件并渲染其边界：
 
@@ -36,7 +66,7 @@ import { Suspense } from 'react'
 function App() {
 	return (
 		<Suspense fallback={<div>loading phone details</div>}>
-			<PhoneDetails />
+			<DataLoader />
 		</Suspense>
 	)
 }
@@ -54,7 +84,7 @@ function App() {
 	return (
 		<ErrorBoundary fallback={<div>Oh no, something bad happened</div>}>
 			<Suspense fallback={<div>loading phone details</div>}>
-				<PhoneDetails />
+				<DataLoader />
 			</Suspense>
 		</ErrorBoundary>
 	)
@@ -94,3 +124,7 @@ function use<Value>(promise: Promise<Value>): Value {
 	}
 }
 ```
+
+## 总结
+
+使用 `Suspense` 和 `use` 钩子，可以让我们更方便地管理异步状态，而不需要手动管理 `isLoading` 和 `error` 状态。
