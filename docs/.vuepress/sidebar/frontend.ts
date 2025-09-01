@@ -107,7 +107,8 @@ export default [
           '09-useSyncExternalStore',
           '10-suspense',
           '11-useTransition',
-          '12-useOptimistic'
+          '12-useOptimistic',
+          '13-useDeferredValue'
         ]
       },
       {
