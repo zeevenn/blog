@@ -106,7 +106,8 @@ export default [
           '08-flushSync',
           '09-useSyncExternalStore',
           '10-suspense',
-          '11-useTransition'
+          '11-useTransition',
+          '12-useOptimistic'
         ]
       },
       {
