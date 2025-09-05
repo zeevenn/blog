@@ -108,7 +108,8 @@ export default [
           '10-suspense',
           '11-useTransition',
           '12-useOptimistic',
-          '13-useDeferredValue'
+          '13-useDeferredValue',
+          '14-useMemo-useCallback-memo'
         ]
       },
       {
